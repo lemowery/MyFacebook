@@ -43,7 +43,7 @@ public class access {
 					case "friendadd":
 						
 						// Ensure only profile owner can add friends, unless first time
-						if(!(currentUser == null && profileOwner == null) && !currentUser.equalsIgnoreCase(profileOwner)) {
+						if(!(currentUser == null && profileOwner == null) && !currentUser.equals(profileOwner)) {
 							System.err.println("Cannot add friends unless profile owner.");
 							log("Cannot add friends unless profile owner.");
 							break;
@@ -76,13 +76,13 @@ public class access {
 					
 					case "listadd":
 						
-						if(!currentUser.equalsIgnoreCase(profileOwner)) {
+						if(!currentUser.equals(profileOwner)) {
 							System.err.println("ERROR: Only profile owner can add new lists.");
 							log("ERROR: Only profile owner can add new lists.");
 							break;
 						}
 						
-						if(split[1].equalsIgnoreCase("nil")) {
+						if(split[1].equals("nil")) {
 							System.err.println("ERROR: nil is a reserved name which cannot be used for list names.");
 							log("ERROR: nil is a reserved name which cannot be used for list names.");
 							break;
@@ -93,7 +93,15 @@ public class access {
 						break;
 					
 					case "friendlist":
-						friendList(string);
+						
+						if (!currentUser.equals(profileOwner)) {
+							System.err.println("ERROR: friendlist command only useable by profile owner.");
+							log("ERROR: friendlist command only useable by profile owner.");
+							break;
+						}
+						
+						friendList(string, lists);
+						
 						break;
 						
 					case "postpicture":
@@ -231,7 +239,28 @@ public class access {
 		
 	}
 	
-	public static void friendList(String command) {
+	public static void friendList(String command, HashMap<String, ArrayList<String>> map) throws IOException {
+		
+		List<String> friendList = readFile("friends.txt");
+		
+		String friendName = command.split(" ")[1];
+		String listName = command.split(" ")[2];
+		
+		if (!friendList.contains(friendName)) {
+			System.err.format("ERROR: Friend %s is not in friends list.\n", friendName);
+			log(String.format("ERROR: Friend %s is not in friends list.", friendName));
+			return;
+		}
+		
+		if (!map.containsKey(listName)) {
+			System.err.format("ERROR: List %s does not exist.\n", friendName);
+			log(String.format("ERROR: List %s does not exist.", friendName));
+			return;
+		}
+		
+		map.get(listName).add(friendName);
+		System.out.format("Friend %s added to list %s.\n", friendName, listName);
+		log(String.format("Friend %s added to list %s.\n", friendName, listName));
 		
 	}
 	

@@ -3,3 +3,5 @@ Friend levi views the profile.
 millie added to friends.
 List students created.
 List employees created.
+Friend millie views the profile.
+ERROR: friendlist command only useable by profile owner.

@@ -3,3 +3,5 @@ viewby levi
 friendadd millie
 listadd students
 listadd employees
+viewby millie
+friendlist millie students
