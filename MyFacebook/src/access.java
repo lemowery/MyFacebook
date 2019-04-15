@@ -1,96 +1,142 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.jar.Attributes.Name;
 
 public class access {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
-		File friendsFile, listsFile, pictureFile, auditFile;
-		List<String> lists, pictures;
+		HashMap<String, ArrayList<String>> lists, pictures;
+		String profileOwner = null;
+		String currentUser = null;
 		
 		if (args.length != 1) {
-			System.out.println("Program must be executed with input file name: ./access filename.txt");
+			System.err.println("Program must be executed with input file name: ./access filename.txt");
+			return;
 		}
 		
 		List<String> inputFileContents = readFile(args[0]);
 		
-		// Initialize files
-		friendsFile =  new File("friends.txt");
-		listsFile=  new File("lists.txt");
-		pictureFile=  new File("pictures.txt");
-		auditFile=  new File("audit.txt");
+		initializeFiles();
 		
-		// Initialize lists
-		lists = new ArrayList<String>();
-		pictures = new ArrayList<String>();
+		// Initialize maps
+		lists = new HashMap<String, ArrayList<String>>();
+		pictures = new HashMap<String, ArrayList<String>>();
 		
-		for (String string : inputFileContents) {
+		if(inputFileContents.size() >= 2 && inputFileContents.get(0).split(" ")[0].equalsIgnoreCase("friendadd") && inputFileContents.get(1).split(" ")[0].equalsIgnoreCase("viewby")) {				
 			
-			String[] split = string.split(" ");
-			
-			if(!split[0].equalsIgnoreCase("friendadd")) {
-			    System.err.format("First command must be of the form: friendadd friendname, but was: %s", string);
-			    return;
-			}
-			
-			switch (split[0]) {
-			
-			case "friendadd":
-				friendAdd(string);
-				break;
-			
-			case "viewby":
-				viewBy(string);
-				break;
-				
-			case "logout":
-				logout();
-				break;
-			
-			case "listadd":
-				listAdd(string);
-				break;
-			
-			case "friendlist":
-				friendList(string);
-				break;
-				
-			case "postpicture":
-				postPicture(string);
-				break;
-			
-			case "chlst":
-				chlst(string);
-				break;
-			
-			case "chmod":
-				chmod(string);
-				break;
-				
-			case "chown":
-				chown(string);
-				break;
-				
-			case "readcomments":
-				readComments(string);
-				break;
-			
-			case "writecomments":
-				writeComments(string);
-				break;
-				
-			case "end":
-				end();
-				break;	
+			for (String string : inputFileContents) {
+					
+				String[] split = string.split(" ");
+					
+					switch (split[0]) {
+					
+					case "friendadd":
+						
+						// Ensure only profile owner can add friends, unless first time
+						if(!(currentUser == null && profileOwner == null) && !currentUser.equalsIgnoreCase(profileOwner)) {
+							System.err.println("Cannot add friends unless profile owner.");
+							log("Cannot add friends unless profile owner.");
+							break;
+						}
+						
+						friendAdd(string);
+						
+						// If profile owner not set, set it
+						if (profileOwner == null) {
+							profileOwner = split[1];
+						}
+						
+						break;
+					
+					case "viewby":
+						
+						// If successful, change the current user
+						if (viewBy(string)) {
+							currentUser = split[1];
+						}
+						
+						break;
+						
+					case "logout":
+						
+						logout();
+						currentUser = null;
+						
+						break;
+					
+					case "listadd":
+						
+						if(!currentUser.equalsIgnoreCase(profileOwner)) {
+							System.err.println("ERROR: Only profile owner can add new lists.");
+							log("ERROR: Only profile owner can add new lists.");
+							break;
+						}
+						
+						if(split[1].equalsIgnoreCase("nil")) {
+							System.err.println("ERROR: nil is a reserved name which cannot be used for list names.");
+							log("ERROR: nil is a reserved name which cannot be used for list names.");
+							break;
+						}
+						
+						listAdd(string, lists);
+						
+						break;
+					
+					case "friendlist":
+						friendList(string);
+						break;
+						
+					case "postpicture":
+						postPicture(string);
+						break;
+					
+					case "chlst":
+						chlst(string);
+						break;
+					
+					case "chmod":
+						chmod(string);
+						break;
+						
+					case "chown":
+						chown(string);
+						break;
+						
+					case "readcomments":
+						readComments(string);
+						break;
+					
+					case "writecomments":
+						writeComments(string);
+						break;
+						
+					case "end":
+						end();
+						break;	
 
-			default:
-				break;
+					default:
+						break;
+						
+					}
+				}
+			
+			listWrite(lists);
+			
 			}
-		}	
 		
+		else {
+			System.err.print("ERROR: Beginning arguments must be friendadd, followed by viewby.\n");
+		}
 	}
 	
 	public static List<String> readFile (String fileName) {
@@ -117,19 +163,71 @@ public class access {
 		  }
 	}
 	
-	public static void friendAdd(String command) {
+	public static void friendAdd(String command) throws IOException {
+		
+		List<String> friendList = readFile("friends.txt");
+		
+		String name = command.split(" ")[1];
+		
+		if (friendList.contains(name)) {
+			
+			System.err.format("ERROR: Friend %s already exists.\n", name);		
+			log(String.format("ERROR: Friend %s already exists.", name));
+			return;
+			
+		}
+
+		FileWriter writer = new FileWriter("friends.txt", true);
+		BufferedWriter bufferedWriter = new BufferedWriter(writer);
+		bufferedWriter.write(name + "\n");
+		bufferedWriter.close();
+		System.out.format("%s added to friends.\n", name);		
+		log(String.format("%s added to friends.", name));
 		
 	}
 	
-	public static void viewBy(String command) {
+	public static boolean viewBy(String command) throws IOException {
+		
+		List<String> friendList = readFile("friends.txt");
+		
+		String name = command.split(" ")[1];
+		
+		if (!friendList.contains(name)) {
+			
+			System.err.format("ERROR: %s is not on the owner's friend list.\n", name);		
+			log(String.format("ERROR: %s is not on the owner's friend list.", name));
+			return false;
+			
+		}
+		
+		System.out.format("Friend %s views the profile.\n", name);
+		log(String.format("Friend %s views the profile.", name));
+		return true;		
 		
 	}
 	
-	public static void logout() {
+	public static void logout() throws IOException {
 		
+		System.out.println("A friend or you no longer view the profile.");
+		log("A friend or you no longer view the profile.");
+	
 	}
 	
-	public static void listAdd(String command) {
+	public static void listAdd(String command, HashMap<String, ArrayList<String>> map) throws IOException {
+		
+		String name = command.split(" ")[1];
+		if(map.containsKey(name)) {
+			
+			System.err.format("ERROR: List %s already exists.\n", name);
+			log(String.format("ERROR: List %s already exists.", name));
+			return;
+		
+		}
+		
+		ArrayList<String> list  = new ArrayList<String>();
+		map.put(name, list);
+		System.out.format("List %s created.\n", name);
+		log(String.format("List %s created.", name));
 		
 	}
 	
@@ -165,4 +263,61 @@ public class access {
 		
 	}
 	
+	public static void log(String command) throws IOException {
+	    
+		FileWriter writer = new FileWriter("audit.txt", true);
+	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
+	    try {
+			bufferedWriter.write(command + "\n");
+		    bufferedWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	}
+	
+	public static void listWrite(HashMap<String, ArrayList<String>> map) throws IOException {
+		
+	    FileWriter writer = new FileWriter("lists.txt", true);
+	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
+	    
+	    for(String key: map.keySet()) {
+	    	bufferedWriter.write(key + ":");
+	    	for(String value: map.get(key)) {
+	    		bufferedWriter.write(value + " ");
+	    	}
+	    	bufferedWriter.write("\n");
+	    }
+		bufferedWriter.close();
+	}
+	
+	public static void initializeFiles() throws IOException {
+		
+		File friendsFile = new File("friends.txt");
+		if (!friendsFile.createNewFile()) {
+			friendsFile.delete();
+			friendsFile.createNewFile();
+		}
+		
+		File auditFile = new File("audit.txt");
+		if (!auditFile.createNewFile()) {
+			auditFile.delete();
+			auditFile.createNewFile();
+		}
+		
+		File listsFile = new File("lists.txt");
+		if (!listsFile.createNewFile()) {
+			listsFile.delete();
+			listsFile.createNewFile();
+		}
+	
+		File pictureFile = new File("pictures.txt");
+		if (!pictureFile.createNewFile()) {
+			pictureFile.delete();
+			pictureFile.createNewFile();
+		}
+		
+	}
+
 }
