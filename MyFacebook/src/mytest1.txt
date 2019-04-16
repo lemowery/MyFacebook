@@ -1,0 +1,23 @@
+friendadd jim
+viewby jim
+friendadd bob
+friendadd sam
+friendadd Sam
+friendadd Rick
+listadd students
+listadd teachers
+friendlist bob students
+friendlist Rick teachers
+friendlist Sam students
+postpicture fish.txt
+postpicture turtle.txt
+chlst fish.txt students
+chmod fish.txt rw r- --
+logout
+viewby Sam
+readcomments fish.txt
+writecomments fish.txt here fishy fishy
+viewby jim
+writecomments fish.txt thats my fish
+writecomments fish.txt we look good
+end

@@ -303,7 +303,7 @@ public class access {
 		map.get(listName).add(friendName);
 		
 		System.out.format("Friend %s added to list %s.\n", friendName, listName);
-		log(String.format("Friend %s added to list %s.\n", friendName, listName));
+		log(String.format("Friend %s added to list %s.", friendName, listName));
 		
 	}
 	
@@ -320,7 +320,7 @@ public class access {
 		ArrayList<String> properties = new ArrayList<String>();
 		properties.add(0, owner);
 		properties.add(1, "nil");
-		properties.add(2, "rx -- --");
+		properties.add(2, "rw -- --");
 		
 		// Create file for picture
     	createPicFile(pictureName + ".txt");
@@ -488,22 +488,22 @@ public class access {
 		// If currentuser is owner and owner has access
 		if (pictureOwner.equals(currentUser) && ownerP.contains("r")) {
 			String contentString = fetchComments(picName + ".txt");
-			System.out.format("User %s reads comments for picture %s.txt as: \n%s\n", currentUser, picName, contentString);
-			log(String.format("User %s reads comments for picture %s as: \n%s\n", currentUser, picName, contentString));
+			System.out.format("User %s reads comments for picture %s.txt as: \n%s", currentUser, picName, contentString);
+			log(String.format("User %s reads comments for picture %s as: \n%s", currentUser, picName, contentString));
 		}
 		
 		// If currentuser isnt owner but is member of list with access
 		else if (lists.get(pictureList).contains(currentUser) && listP.contains("r")) {
 			String contentString = fetchComments(picName + ".txt");
-			System.out.format("User %s reads comments for picture %s.txt as: \n%s\n", currentUser, picName, contentString);
-			log(String.format("User %s reads comments for picture %s.txt as: \n%s\n", currentUser, picName, contentString));
+			System.out.format("User %s reads comments for picture %s.txt as: \n%s", currentUser, picName, contentString);
+			log(String.format("User %s reads comments for picture %s.txt as: \n%s", currentUser, picName, contentString));
 		}
 		
 		// If others have access
 		else if (otherP.contains("r")) {
 			String contentString = fetchComments(picName + ".txt");
-			System.out.format("User %s reads comments for picture %s.txt as: \n%s\n", currentUser, picName, contentString);
-			log(String.format("User %s reads comments for picture %s.txt as: \n%s\n", currentUser, picName, contentString));
+			System.out.format("User %s reads comments for picture %s.txt as: \n%s", currentUser, picName, contentString);
+			log(String.format("User %s reads comments for picture %s.txt as: \n%s", currentUser, picName, contentString));
 		}
 		
 		// No access
@@ -548,21 +548,21 @@ public class access {
 		
 		// If currentuser is owner and owner has access
 		if (pictureOwner.equals(currentUser) && ownerP.contains("w")) {
-			writeComments(picName + ".txt", text);
+			writeComment(picName + ".txt", text);
 			System.out.format("Friend %s wrote to file %s.txt:\n%s\n", currentUser, picName, text);
 			log(String.format("Friend %s wrote to file %s.txt:\n%s", currentUser, picName, text));
 		}
 		
 		// If currentuser isnt owner but is member of list with access
 		else if (lists.get(pictureList).contains(currentUser) && listP.contains("w")) {
-			writeComments(picName + ".txt", text);
+			writeComment(picName + ".txt", text);
 			System.out.format("Friend %s wrote to file %s.txt:\n%s\n", currentUser, picName, text);
 			log(String.format("Friend %s wrote to file %s.txt:\n%s", currentUser, picName, text));
 		}
 		
 		// If others have access
 		else if (otherP.contains("w")) {
-			writeComments(picName + ".txt", text);
+			writeComment(picName + ".txt", text);
 			System.out.format("Friend %s wrote to file %s.txt:\n%s\n", currentUser, picName, text);
 			log(String.format("Friend %s wrote to file %s.txt:\n%s", currentUser, picName, text));
 		}
@@ -596,7 +596,7 @@ public class access {
 		
 		String line;
 		while((line = br.readLine()) != null) {
-			output = output + line;
+			output = output + line + "\n";
 		}
 		
 		br.close();
@@ -605,13 +605,13 @@ public class access {
 		
 	}
 	
-	public static void writeComments(String fileName, String text) throws IOException {
+	public static void writeComment(String fileName, String text) throws IOException {
 		/*
 		 * Appends text to picture file
 		 */
 		
 		File file = new File(fileName);
-		FileWriter	writer = new FileWriter("fish.txt", true);
+		FileWriter	writer = new FileWriter(fileName, true);
 		BufferedWriter	bufferedWriter = new BufferedWriter(writer);
 		bufferedWriter.write(text + "\n");
 		bufferedWriter.close();

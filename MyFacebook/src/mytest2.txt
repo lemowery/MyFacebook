@@ -1,0 +1,36 @@
+friendadd levi
+viewby levi
+friendadd millie
+friendadd john
+friendadd derek
+friendadd logan
+friendadd steve
+listadd family
+listadd friends
+listadd strangers
+friendlist millie family
+friendlist john friends
+friendlist derek friends
+friendlist logan friends
+friendlist steve strangers
+postpicture birthday.txt
+postpicture wedding.txt
+postpicture graduation.txt
+chlst birthday.txt friends
+chlst wedding.txt family
+chlst graduation strangers
+chmod birthday.txt rw r- rw
+chmod wedding.txt rw rw --
+chmod graduation.txt rw r- r-
+logout
+viewby millie
+writecomments wedding.txt what a fun day!
+writecomments birthday.txt happy birthday!
+logout
+viewby john
+writecomments wedding.txt sick invite
+readcomments birthday.txt
+logout
+viewby steve
+writecomments wedding.txt that should have been me
+end
