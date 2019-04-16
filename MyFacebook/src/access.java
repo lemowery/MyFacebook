@@ -405,13 +405,38 @@ public class access {
 	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
 	    
 	    for(String key: map.keySet()) {
+	    	
 	    	bufferedWriter.write(key + ".txt: ");
 	    	for(String value: map.get(key)) {
+	    	
 	    		bufferedWriter.write(value + " ");
+	    	
 	    	}
+	    	
 	    	bufferedWriter.write("\n");
+			createPicFile(key, map);
+	    	
 	    }
+	    
 		bufferedWriter.close();
+		
+	}
+	
+	public static void createPicFile(String picName, HashMap<String, ArrayList<String>> map) throws IOException {
+		
+    	String picFileName = String.format("%s.txt", picName);
+		File picFile = new File(picFileName);
+		if (!picFile.createNewFile()) {
+			picFile.delete();
+			picFile.createNewFile();
+		}
+		
+	    FileWriter writer = new FileWriter(picFileName, true);
+	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
+	    
+	    bufferedWriter.write(picName + "\n");
+	    bufferedWriter.close();
+		
 	}
 	
 	public static void initializeFiles() throws IOException {
