@@ -13,6 +13,7 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -70,8 +71,9 @@ public class access {
 					case "viewby":
 						
 						// If successful, change the current user
-						if (viewBy(string) != null) {
-							currentUser = viewBy(string);
+						String temp = viewBy(string);
+						if (temp != null) {
+							currentUser = temp;
 						}
 						
 						break;
@@ -132,15 +134,21 @@ public class access {
 						break;
 					
 					case "chmod":
+						
 						chmod(string, currentUser, profileOwner, pictures);
+						
 						break;
 						
 					case "chown":
-						chown(string);
+						
+						chown(string, profileOwner, currentUser, pictures);
+						
 						break;
 						
 					case "readcomments":
-						readComments(string);
+						
+						readComments(string, currentUser, profileOwner, pictures, lists);
+						
 						break;
 					
 					case "writecomments":
@@ -334,8 +342,8 @@ public class access {
 		
 		// Ensure picture exists
 		if (pictures.get(picName) == null) {
-			System.err.format("Picture %s.txt does not exist.\n", picName);
-			log(String.format("Picture %s.txt does not exist.", picName));
+			System.err.format("Picture %s.txt does not exist1.\n", picName);
+			log(String.format("Picture %s.txt does not exist1.", picName));
 			return;
 		}
 		
@@ -344,6 +352,12 @@ public class access {
 			System.err.format("List %s does not exist.\n", listName);
 			log(String.format("List %s does not exist.", listName));
 			return;
+		}
+		
+		// Ensure someone is viewing the profile
+		if (currentUser == null) {
+			System.err.println("Must be someone viewing the profile to use readComments.\n");
+			log("Must be someone viewing the profile to use readComments.");
 		}
 		
 		// Ensure user is profile owner or picture owner
@@ -385,6 +399,12 @@ public class access {
 			log(String.format("Picture %s.txt does not exist.", picName));
 			return;
 		}
+		
+		// Ensure someone is viewing the profile
+		if (currentUser == null) {
+			System.err.println("Must be someone viewing the profile to use readComments.\n");
+			log("Must be someone viewing the profile to use readComments.");
+		}
 				
 		// Ensure user is profile owner or picture owner
 		if (currentUser.equals(profileOwner) || pictures.get(picName).get(0).equals(currentUser)) {
@@ -401,17 +421,102 @@ public class access {
 
 	}
 	
-	public static void chown(String command) {
+	public static void chown(String command, String profileOwner, String currentUser, HashMap<String, ArrayList<String>> pictures) throws IOException {
+		/*
+		 * Changes current owner of picture
+		 * Can only be executed by profile owner
+		 */
 		
+		String picName = command.split(" ")[1].replace(".txt", "");
+		String newUser = command.split(" ")[2];
+		
+		// Ensure picture exists
+		if (pictures.get(picName) == null) {
+			System.err.format("Picture %s.txt does not exist.\n", picName);
+			log(String.format("Picture %s.txt does not exist.", picName));
+			return;
+		}
+				
+		// Ensure user is profile owner or picture owner
+		if (currentUser.equals(profileOwner)) {
+			
+			pictures.get(picName).set(0, newUser);
+			System.err.format("Picture %s.txt owner changed to %s.\n", picName, newUser);
+			log(String.format("Picture %s.txt owner changed to %s.", picName, newUser));
+			return;
+				
+		}
+		
+		System.err.format("ERROR: Current user %s is not the profile owner nor the picture owner.\n", currentUser);
+		log(String.format("ERROR: Current user %s is not the profile owner nor the picture owner.", currentUser));
+
 	}
 	
-	public static void readComments(String command) {
+	public static void readComments(String command, String currentUser, String profileOwner, HashMap<String, ArrayList<String>> pictures, HashMap<String, ArrayList<String>> lists) throws IOException {
+		/*
+		 * Allows the user to view the comments/contents of the picture file if they have permissions
+		 * If currentuser == pictureowner and owner has r access
+		 * If currentuser != owner but is a member of the list which has r access
+		 * If currentuser != owner, not a member of the list, but others have r access
+		 * Otherwise deny access
+		 */
+		
+		String picName = command.split(" ")[1].replace(".txt", "");
+		
+		// Ensure picture exists
+		if (pictures.get(picName) == null) {
+			System.err.format("Picture %s.txt does not exist.\n", picName);
+			log(String.format("Picture %s.txt does not exist.", picName));
+			return;
+		}
+
+		// Ensure someone is viewing the profile
+		if (currentUser == null) {
+			System.err.println("Must be someone viewing the profile to use readComments.\n");
+			log("Must be someone viewing the profile to use readComments.");
+		}
+		
+		String pictureOwner = pictures.get(picName).get(0);
+		String pictureList = pictures.get(picName).get(1);
+		String permissions = pictures.get(picName).get(2);
+		String ownerP = permissions.split(" ")[0];
+		String listP = permissions.split(" ")[1];
+		String otherP = permissions.split(" ")[2];
+		
+		// If currentuser is owner and owner has access
+		if (pictureOwner.equals(currentUser) && ownerP.contains("r")) {
+			String contentString = fetchComments(picName + ".txt");
+			System.out.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString);
+			log(String.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString));
+		}
+		
+		// If currentuser isnt owner but is member of list with access
+		else if (lists.get(pictureList).contains(currentUser) && listP.contains("r")) {
+			String contentString = fetchComments(picName + ".txt");
+			System.out.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString);
+			log(String.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString));
+		}
+		
+		// If others have access
+		else if (otherP.contains("r")) {
+			String contentString = fetchComments(picName + ".txt");
+			System.out.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString);
+			log(String.format("User %s reads comments for picture %s as: \n%s", currentUser, picName + ".txt", contentString));
+		}
+		
+		// No access
+		else {
+			System.err.format("Current user %s does not have access to read from %s.\n", currentUser, picName + ".txt");
+			log(String.format("Current user %s does not have access to read from %s.", currentUser, picName + ".txt"));
+		}
 		
 	}
 	
 	public static void writeComments(String command) {
 		
 	}
+	
+	
 	
 	public static void end(HashMap<String, ArrayList<String>> lists, HashMap<String, ArrayList<String>> pictures) throws IOException {
 		/*
@@ -420,6 +525,26 @@ public class access {
 		
 		listWrite(lists);
 		pictureWrite(pictures);
+		
+	}
+	
+	public static String fetchComments(String fileName) throws IOException {
+		/*
+		 * Reads from picture file to display comments
+		 */
+		
+		File file = new File(fileName);
+		BufferedReader br = new BufferedReader(new FileReader(file)); 
+		String output = "";
+		
+		String line;
+		while((line = br.readLine()) != null) {
+			output = output + line;
+		}
+		
+		br.close();
+		
+		return output;
 		
 	}
 	

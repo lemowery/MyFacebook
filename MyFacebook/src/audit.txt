@@ -1,14 +1,13 @@
 levi added to friends.
 Friend levi views the profile.
-Friend levi views the profile.
 millie added to friends.
 List students created.
 List employees created.
 Friend millie views the profile.
-Friend millie views the profile.
 Picture fish.txt with owner millie and default permissions has been posted.
 A friend or you no longer view the profile.
 Friend levi views the profile.
-Friend levi views the profile.
 Picture fish.txt list changed to students.
-Picture fis.txt does not exist.
+Picture fish.txt permissions changed to -- -- --.
+Picture fish.txt owner changed to levi.
+Current user levi does not have access to read from fish.txt.
