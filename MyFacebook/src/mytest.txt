@@ -5,4 +5,7 @@ listadd students
 listadd employees
 viewby millie
 postpicture fish.txt
+logout
+viewby levi
+chlst fish.txt students
 end

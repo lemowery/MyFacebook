@@ -113,10 +113,13 @@ public class access {
 						}
 						
 						postPicture(string, pictures, currentUser);
+						
 						break;
 					
 					case "chlst":
-						chlst(string);
+						
+						chlst(string, currentUser, profileOwner, pictures, lists);
+						
 						break;
 					
 					case "chmod":
@@ -300,8 +303,36 @@ public class access {
 		
 	}
 	
-	public static void chlst(String command) {
+	public static void chlst(String command, String currentUser, String profileOwner, HashMap<String, ArrayList<String>> pictures, HashMap<String, ArrayList<String>> lists) throws IOException {
+		/*
+		 * Changes current list associated with a picture
+		 * Only picture owner or profile owner can execute
+		 * Can only change the list to one the owner is a member of
+		 */
 		
+		String picName = command.split(" ")[1].replace(".txt", "");
+		String listName = command.split(" ")[2];
+		
+		if (currentUser.equals(profileOwner) || pictures.get(picName).get(0).equals(currentUser)) {
+						
+			if (currentUser.equals(profileOwner) || lists.get(listName).contains(currentUser)) {
+				
+				pictures.get(picName).set(1, listName);
+				System.err.format("Picture %s.txt list changed to %s.\n", picName, listName);
+				log(String.format("Picture %s.txt list changed to %s.", picName, listName));
+				return;
+				
+			}
+			
+			System.err.format("ERROR: Current user %s is not a member of the desired list %s.\n", currentUser, listName);
+			log(String.format("ERROR: Current user %s is not a member of the desired list %s.", currentUser, listName));
+			return;
+			
+		}
+		
+		System.err.format("ERROR: Current user %s is neither the profile owner nor the picture owner.\n", currentUser);
+		log(String.format("ERROR: Current user %s is neither the profile owner nor the picture owner.", currentUser));
+
 	}
 	
 	public static void chmod(String command) {
