@@ -61,8 +61,8 @@ public class access {
 					case "viewby":
 						
 						// If successful, change the current user
-						if (viewBy(string)) {
-							currentUser = split[1];
+						if (viewBy(string) != null) {
+							currentUser = viewBy(string);
 						}
 						
 						break;
@@ -105,7 +105,14 @@ public class access {
 						break;
 						
 					case "postpicture":
-						postPicture(string);
+						
+						if(currentUser == null) {
+							System.err.println("ERROR: Must be someone viewing profile.");
+							log("ERROR: Must be someone viewing profile.");	
+							break;
+						}
+						
+						postPicture(string, pictures, currentUser);
 						break;
 					
 					case "chlst":
@@ -129,17 +136,14 @@ public class access {
 						break;
 						
 					case "end":
-						end();
+						end(lists, pictures);
 						break;	
 
 					default:
 						break;
 						
 					}
-				}
-			
-			listWrite(lists);
-			
+				}			
 			}
 		
 		else {
@@ -172,6 +176,10 @@ public class access {
 	}
 	
 	public static void friendAdd(String command) throws IOException {
+		/*
+		 * Adds friend to friend file
+		 * Ensures no duplicate friends
+		 */
 		
 		List<String> friendList = readFile("friends.txt");
 		
@@ -194,7 +202,11 @@ public class access {
 		
 	}
 	
-	public static boolean viewBy(String command) throws IOException {
+	public static String viewBy(String command) throws IOException {
+		/*
+		 * Ensures friend exists
+		 * Returns new currentUser
+		 */
 		
 		List<String> friendList = readFile("friends.txt");
 		
@@ -204,13 +216,13 @@ public class access {
 			
 			System.err.format("ERROR: %s is not on the owner's friend list.\n", name);		
 			log(String.format("ERROR: %s is not on the owner's friend list.", name));
-			return false;
+			return null;
 			
 		}
 		
 		System.out.format("Friend %s views the profile.\n", name);
 		log(String.format("Friend %s views the profile.", name));
-		return true;		
+		return name;		
 		
 	}
 	
@@ -222,6 +234,9 @@ public class access {
 	}
 	
 	public static void listAdd(String command, HashMap<String, ArrayList<String>> map) throws IOException {
+		/*
+		 * Creates new list, adds list to listMap with no members
+		 */
 		
 		String name = command.split(" ")[1];
 		if(map.containsKey(name)) {
@@ -240,6 +255,9 @@ public class access {
 	}
 	
 	public static void friendList(String command, HashMap<String, ArrayList<String>> map) throws IOException {
+		/*
+		 * Adds friend to given list, updates list map
+		 */
 		
 		List<String> friendList = readFile("friends.txt");
 		
@@ -264,7 +282,21 @@ public class access {
 		
 	}
 	
-	public static void postPicture(String command) {
+	public static void postPicture(String command, HashMap<String, ArrayList<String>> map, String owner) throws IOException {
+		/*
+		 * Creates picture and adds it to the pictureMap
+		 * Stored in map as such: pictureName --> [owner, list, permissions]
+		 */
+		
+		String pictureFile = command.split(" ")[1];
+		String pictureName = pictureFile.replace(".txt", "");
+		ArrayList<String> properties = new ArrayList<String>();
+		properties.add(0, owner);
+		properties.add(1, "nil");
+		properties.add(2, "rx -- --");
+		map.put(pictureName, properties);
+		System.err.format("Picture %s.txt with owner %s and default permissions has been posted.\n", pictureName, owner);
+		log(String.format("Picture %s.txt with owner %s and default permissions has been posted.", pictureName, owner));
 		
 	}
 	
@@ -288,11 +320,20 @@ public class access {
 		
 	}
 	
-	public static void end() {
+	public static void end(HashMap<String, ArrayList<String>> lists, HashMap<String, ArrayList<String>> pictures) throws IOException {
+		/*
+		 * Writes necessary output files
+		 */
+		
+		listWrite(lists);
+		pictureWrite(pictures);
 		
 	}
 	
 	public static void log(String command) throws IOException {
+		/*
+		 * Logs output prompt to audit file
+		 */
 	    
 		FileWriter writer = new FileWriter("audit.txt", true);
 	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
@@ -307,12 +348,33 @@ public class access {
 	}
 	
 	public static void listWrite(HashMap<String, ArrayList<String>> map) throws IOException {
+		/*
+		 * Writes every list and its contents to the list file
+		 */
 		
 	    FileWriter writer = new FileWriter("lists.txt", true);
 	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
 	    
 	    for(String key: map.keySet()) {
-	    	bufferedWriter.write(key + ":");
+	    	bufferedWriter.write(key + ": ");
+	    	for(String value: map.get(key)) {
+	    		bufferedWriter.write(value + " ");
+	    	}
+	    	bufferedWriter.write("\n");
+	    }
+		bufferedWriter.close();
+	}
+	
+	public static void pictureWrite(HashMap<String, ArrayList<String>> map) throws IOException {
+		/*
+		 * Writes every picture and its properties to the picture file
+		 */
+		
+	    FileWriter writer = new FileWriter("pictures.txt", true);
+	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
+	    
+	    for(String key: map.keySet()) {
+	    	bufferedWriter.write(key + ".txt: ");
 	    	for(String value: map.get(key)) {
 	    		bufferedWriter.write(value + " ");
 	    	}
@@ -322,6 +384,10 @@ public class access {
 	}
 	
 	public static void initializeFiles() throws IOException {
+		/*
+		 * Initializes the friends, audit, pictures, and list files
+		 * Deletes them if the already exist
+		 */
 		
 		File friendsFile = new File("friends.txt");
 		if (!friendsFile.createNewFile()) {
