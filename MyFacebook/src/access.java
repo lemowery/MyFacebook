@@ -123,7 +123,7 @@ public class access {
 						break;
 					
 					case "chmod":
-						chmod(string);
+						chmod(string, currentUser, profileOwner, pictures);
 						break;
 						
 					case "chown":
@@ -185,17 +185,16 @@ public class access {
 		 */
 		
 		List<String> friendList = readFile("friends.txt");
-		
 		String name = command.split(" ")[1];
 		
+		// Ensure no duplicate friends
 		if (friendList.contains(name)) {
-			
 			System.err.format("ERROR: Friend %s already exists.\n", name);		
 			log(String.format("ERROR: Friend %s already exists.", name));
 			return;
-			
 		}
 
+		// Add friend to friend file
 		FileWriter writer = new FileWriter("friends.txt", true);
 		BufferedWriter bufferedWriter = new BufferedWriter(writer);
 		bufferedWriter.write(name + "\n");
@@ -211,16 +210,14 @@ public class access {
 		 * Returns new currentUser
 		 */
 		
-		List<String> friendList = readFile("friends.txt");
-		
+		List<String> friendList = readFile("friends.txt");	
 		String name = command.split(" ")[1];
 		
-		if (!friendList.contains(name)) {
-			
+		// Ensure valid friend name
+		if (!friendList.contains(name)) {	
 			System.err.format("ERROR: %s is not on the owner's friend list.\n", name);		
 			log(String.format("ERROR: %s is not on the owner's friend list.", name));
-			return null;
-			
+			return null;	
 		}
 		
 		System.out.format("Friend %s views the profile.\n", name);
@@ -230,6 +227,9 @@ public class access {
 	}
 	
 	public static void logout() throws IOException {
+		/*
+		 * Simply logs logout
+		 */
 		
 		System.out.println("A friend or you no longer view the profile.");
 		log("A friend or you no longer view the profile.");
@@ -242,16 +242,18 @@ public class access {
 		 */
 		
 		String name = command.split(" ")[1];
+		
+		// Ensure no duplicate lists
 		if(map.containsKey(name)) {
-			
 			System.err.format("ERROR: List %s already exists.\n", name);
 			log(String.format("ERROR: List %s already exists.", name));
 			return;
-		
 		}
 		
+		// Create new list and add it to memory
 		ArrayList<String> list  = new ArrayList<String>();
 		map.put(name, list);
+		
 		System.out.format("List %s created.\n", name);
 		log(String.format("List %s created.", name));
 		
@@ -267,19 +269,23 @@ public class access {
 		String friendName = command.split(" ")[1];
 		String listName = command.split(" ")[2];
 		
+		// Ensure friend name is valid 
 		if (!friendList.contains(friendName)) {
 			System.err.format("ERROR: Friend %s is not in friends list.\n", friendName);
 			log(String.format("ERROR: Friend %s is not in friends list.", friendName));
 			return;
 		}
 		
+		// Ensure list name is valid
 		if (!map.containsKey(listName)) {
 			System.err.format("ERROR: List %s does not exist.\n", friendName);
 			log(String.format("ERROR: List %s does not exist.", friendName));
 			return;
 		}
 		
+		// Add friend to list
 		map.get(listName).add(friendName);
+		
 		System.out.format("Friend %s added to list %s.\n", friendName, listName);
 		log(String.format("Friend %s added to list %s.\n", friendName, listName));
 		
@@ -293,10 +299,14 @@ public class access {
 		
 		String pictureFile = command.split(" ")[1];
 		String pictureName = pictureFile.replace(".txt", "");
+		
+		// Create list with default properties
 		ArrayList<String> properties = new ArrayList<String>();
 		properties.add(0, owner);
 		properties.add(1, "nil");
 		properties.add(2, "rx -- --");
+		
+		// Add picture to in-memory storage
 		map.put(pictureName, properties);
 		System.err.format("Picture %s.txt with owner %s and default permissions has been posted.\n", pictureName, owner);
 		log(String.format("Picture %s.txt with owner %s and default permissions has been posted.", pictureName, owner));
@@ -313,8 +323,24 @@ public class access {
 		String picName = command.split(" ")[1].replace(".txt", "");
 		String listName = command.split(" ")[2];
 		
+		// Ensure picture exists
+		if (pictures.get(picName) == null) {
+			System.err.format("Picture %s.txt does not exist.\n", picName);
+			log(String.format("Picture %s.txt does not exist.", picName));
+			return;
+		}
+		
+		// Ensure list exists
+		if (lists.get(listName) == null) {
+			System.err.format("List %s does not exist.\n", listName);
+			log(String.format("List %s does not exist.", listName));
+			return;
+		}
+		
+		// Ensure user is profile owner or picture owner
 		if (currentUser.equals(profileOwner) || pictures.get(picName).get(0).equals(currentUser)) {
-						
+	
+			// Ensure user is profile owner or member of list 
 			if (currentUser.equals(profileOwner) || lists.get(listName).contains(currentUser)) {
 				
 				pictures.get(picName).set(1, listName);
@@ -335,8 +361,35 @@ public class access {
 
 	}
 	
-	public static void chmod(String command) {
+	public static void chmod(String command, String currentUser, String profileOwner, HashMap<String, ArrayList<String>> pictures) throws IOException {
+		/*
+		 * Changes current permissions associated with a picture
+		 * Only picture owner or profile owner can execute
+		 */
 		
+		String picName = command.split(" ")[1].replace(".txt", "");
+		String permissions = command.split(" ", 3)[2];
+		
+		// Ensure picture exists
+		if (pictures.get(picName) == null) {
+			System.err.format("Picture %s.txt does not exist.\n", picName);
+			log(String.format("Picture %s.txt does not exist.", picName));
+			return;
+		}
+				
+		// Ensure user is profile owner or picture owner
+		if (currentUser.equals(profileOwner) || pictures.get(picName).get(0).equals(currentUser)) {
+			
+			pictures.get(picName).set(2, permissions);
+			System.err.format("Picture %s.txt permissions changed to %s.\n", picName, permissions);
+			log(String.format("Picture %s.txt permissions changed to %s.", picName, permissions));
+			return;
+				
+		}
+		
+		System.err.format("ERROR: Current user %s is neither the profile owner nor the picture owner.\n", currentUser);
+		log(String.format("ERROR: Current user %s is neither the profile owner nor the picture owner.", currentUser));
+
 	}
 	
 	public static void chown(String command) {
@@ -404,17 +457,20 @@ public class access {
 	    FileWriter writer = new FileWriter("pictures.txt", true);
 	    BufferedWriter bufferedWriter = new BufferedWriter(writer);
 	    
+	    // Every picture
 	    for(String key: map.keySet()) {
 	    	
 	    	bufferedWriter.write(key + ".txt: ");
+	    	
+	    	// Every property
 	    	for(String value: map.get(key)) {
-	    	
 	    		bufferedWriter.write(value + " ");
-	    	
 	    	}
 	    	
 	    	bufferedWriter.write("\n");
-			createPicFile(key, map);
+			
+	    	// Create individual picture files
+	    	createPicFile(key, map);
 	    	
 	    }
 	    
@@ -423,9 +479,13 @@ public class access {
 	}
 	
 	public static void createPicFile(String picName, HashMap<String, ArrayList<String>> map) throws IOException {
+		/*
+		 * Create individual file for each picture
+		 */
 		
     	String picFileName = String.format("%s.txt", picName);
-		File picFile = new File(picFileName);
+		
+    	File picFile = new File(picFileName);
 		if (!picFile.createNewFile()) {
 			picFile.delete();
 			picFile.createNewFile();

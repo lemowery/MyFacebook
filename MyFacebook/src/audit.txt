@@ -11,3 +11,4 @@ A friend or you no longer view the profile.
 Friend levi views the profile.
 Friend levi views the profile.
 Picture fish.txt list changed to students.
+Picture fis.txt does not exist.

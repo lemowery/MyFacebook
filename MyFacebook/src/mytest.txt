@@ -8,4 +8,5 @@ postpicture fish.txt
 logout
 viewby levi
 chlst fish.txt students
+chmod fish.txt rw rw rw
 end
