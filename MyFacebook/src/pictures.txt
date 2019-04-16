@@ -1,1 +1,1 @@
-fish.txt: levi students -- -- -- 
+fish.txt: levi students -- rw -- 

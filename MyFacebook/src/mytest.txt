@@ -2,13 +2,12 @@ friendadd levi
 viewby levi
 friendadd millie
 listadd students
-listadd employees
-viewby millie
+friendlist millie students
 postpicture fish.txt
-logout
-viewby levi
 chlst fish.txt students
-chmod fish.txt -- -- --
-chown fish.txt levi
+chmod fish.txt -- rw --
+viewby millie
 readcomments fish.txt
+writecomments fish.txt here fishy fishy
+writecomments fish.txt caught a big one
 end
