@@ -1,3 +1,15 @@
+/*
+ * Name: Levi Mowery
+ * ID: lemowery
+ * WVU Number: 800096308
+ * Programming Assignment 2
+ * Date: 04/16/2019
+ * 
+ * STATUS
+ * All features working properly, no extra-credit is implemented
+ * 	
+ */
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
